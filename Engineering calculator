@@ -1,0 +1,234 @@
+import 'package:flutter/material.dart';
+import 'dart:math' as math;
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Engineering calculator',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: CalculatorPage(),
+    );
+  }
+}
+
+class CalculatorPage extends StatefulWidget {
+  @override
+  _CalculatorPageState createState() => _CalculatorPageState();
+}
+
+class _CalculatorPageState extends State<CalculatorPage> {
+  String result = '';
+  String input = '';
+
+  void buttonPressed(String buttonText) {
+    setState(() {
+      if (buttonText == 'C') {
+        input = '';
+        result = '';
+      } else if (buttonText == '=') {
+        try {
+          result = evaluateExpression(input).toString();
+        } catch (e) {
+          result = 'Error';
+        }
+      } else {
+        input += buttonText;
+      }
+    });
+  }
+
+  double evaluateExpression(String expr) {
+    if (expr.isEmpty) {
+      return 0.0;
+    }
+
+    // Remove spaces
+    expr = expr.replaceAll(' ', '');
+
+    // Processing trigonometric functions and logarithms
+    if (expr.contains('sin')) {
+      return math.sin(parseSimpleExpression(expr.replaceAll('sin', '')));
+    } else if (expr.contains('cos')) {
+      return math.cos(parseSimpleExpression(expr.replaceAll('cos', '')));
+    } else if (expr.contains('tan')) {
+      return math.tan(parseSimpleExpression(expr.replaceAll('tan', '')));
+    } else if (expr.contains('log')) {
+      return math.log(parseSimpleExpression(expr.replaceAll('log', '')));
+    } else if (expr.contains('√')) {
+      return math.sqrt(parseSimpleExpression(expr.replaceAll('√', '')));
+    }
+
+    // A simple parser for basic arithmetic operations
+    List<String> tokens = _tokenize(expr);
+
+    double result = _calculate(tokens);
+    return result;
+  }
+
+  double _calculate(List<String> tokens) {
+    double result = double.parse(tokens[0]);
+
+    for (int i = 1; i < tokens.length; i += 2) {
+      String operator = tokens[i];
+      double nextNumber = double.parse(tokens[i + 1]);
+
+      switch (operator) {
+        case '+':
+          result += nextNumber;
+          break;
+        case '-':
+          result -= nextNumber;
+          break;
+        case '*':
+          result *= nextNumber;
+          break;
+        case '/':
+          result /= nextNumber;
+          break;
+      }
+    }
+
+    return result;
+  }
+
+  List<String> _tokenize(String expr) {
+    List<String> tokens = [];
+    String number = '';
+
+    for (int i = 0; i < expr.length; i++) {
+      String char = expr[i];
+
+      if ('0123456789.'.contains(char)) {
+        number += char;
+      } else {
+        if (number.isNotEmpty) {
+          tokens.add(number);
+          number = '';
+        }
+        tokens.add(char);
+      }
+    }
+
+    if (number.isNotEmpty) {
+      tokens.add(number);
+    }
+
+    return tokens;
+  }
+
+  // A simple parser for the expression in question
+  double parseSimpleExpression(String expr) {
+    double num = double.parse(expr);
+    return num;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Engineering calculator'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+            alignment: Alignment.centerRight,
+            child: Text(
+              input,
+              style: TextStyle(fontSize: 48),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+            alignment: Alignment.centerRight,
+            child: Text(
+              result,
+              style: TextStyle(fontSize: 24, color: Colors.grey),
+            ),
+          ),
+          Expanded(child: Divider()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildButton('7'),
+              buildButton('8'),
+              buildButton('9'),
+              buildButton('/'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildButton('4'),
+              buildButton('5'),
+              buildButton('6'),
+              buildButton('*'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildButton('1'),
+              buildButton('2'),
+              buildButton('3'),
+              buildButton('-'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildButton('C'),
+              buildButton('0'),
+              buildButton('='),
+              buildButton('+'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildButton('sin'),
+              buildButton('cos'),
+              buildButton('tan'),
+              buildButton('log'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              buildButton('√'),
+              buildButton('('),
+              buildButton(')'),
+              buildButton('.'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildButton(String buttonText) {
+    return Container(
+      width: 80, // Button width
+      height: 80, // Button height
+      margin: EdgeInsets.all(4.0), // Spacing between buttons
+      child: ElevatedButton(
+        onPressed: () => buttonPressed(buttonText),
+        child: Text(
+          buttonText,
+          style: TextStyle(fontSize: 24),
+        ),
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(70, 70), // Minimum button size
+        ),
+      ),
+    );
+  }
+}
